@@ -342,6 +342,7 @@ int  AC2Class::LocalReadIO(String ioName)
 		}
 	}
 
+	return 0;
 }
 
 void AC2Class::HandleWriteCommand(String command)
