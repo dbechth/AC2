@@ -33,7 +33,7 @@ void handleTerminal()
 	String tmpBuffer = "";
 	if (AC2.bufferCount != 0)
 	{
-		for (size_t i = 0; i < (AC2.bufferCount); i++)
+		for (int i = 0; i < (AC2.bufferCount); i++)
 		{
 			tmpBuffer += AC2.buffer[i];
 		}
@@ -202,7 +202,7 @@ void AC2Class::HandleIO()
 
 		if (device.Data[i].Type == DigitalOutput)
 		{
-			if ((device.Data[i].DataTimer >= 0) && (device.Data[i].DataTimer <= taskRate)) {
+			if ((device.Data[i].DataTimer >= 0) && (device.Data[i].DataTimer <= (int)taskRate)) {
 				device.Data[i].Value = device.Data[i].DefaultValue;
 			}
 			else if (device.Data[i].DataTimer >= 0) {
