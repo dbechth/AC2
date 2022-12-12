@@ -31,13 +31,13 @@ void terminal()
 void handleTerminal()
 {
 	String tmpBuffer = "";
-	if (AC2.bufferCount != 0)
+	if (AC2.terminalBufferCount != 0)
 	{
-		for (int i = 0; i < (AC2.bufferCount); i++)
+		for (int i = 0; i < (AC2.terminalBufferCount); i++)
 		{
-			tmpBuffer += AC2.buffer[i];
+			tmpBuffer += AC2.terminalBuffer[i];
 		}
-		AC2.bufferCount = 0;
+		AC2.terminalBufferCount = 0;
 	}
 	AC2.webserver.send(200, "text/plain", tmpBuffer);
 }
@@ -79,15 +79,24 @@ void getData()
 	AC2.webserver.send(200, "text/plain", tmpBuffer);
 }
 
+void AC2Class::AddExternalMessage(String message)
+{
+	if(bufferCount<BufferSize)
+	{
+		buffer[bufferCount] = message;
+		bufferCount++;
+	}
+}
+
 void AC2Class::print(String message)
 {
-	if (bufferCount >= ACBufferSize)
+	if (terminalBufferCount >= ACTerminalBufferSize)
 	{
-		buffer[0] = "Buffer Overflow! Messages were lost";
-		bufferCount = 1;
+		terminalBuffer[0] = "Buffer Overflow! Messages were lost";
+		terminalBufferCount = 1;
 	}
-	buffer[bufferCount] = message;
-	bufferCount++;
+	terminalBuffer[terminalBufferCount] = message;
+	terminalBufferCount++;
 }
 
 void AC2Class::println(String message)
@@ -110,7 +119,7 @@ bool AC2Class::init(String name, IPAddress ip, IPAddress broadcastIP, int port, 
 	webserver.on("/handleTerminal", handleTerminal);
 	webserver.begin();
 
-	bufferCount = 0;
+	terminalBufferCount = 0;
 
 	//get started off right
 	timeNow = millis();
@@ -129,7 +138,8 @@ void AC2Class::task()
 	unsigned long elapsedTime = timeNow - lastTime;
 	if (elapsedTime >= taskRate) {
 		lastTime = timeNow;
-		ReadMessages();
+		ReadUDPMessages();
+		HandleMessageBuffer();
 		HandleIO();
 		//WriteIO();
 		//SendMessages();
@@ -190,9 +200,9 @@ void AC2Class::SetupOTA()
 		}
 		});
 	ArduinoOTA.begin();
-	Serial.println("Ready");
-	Serial.print("IP address: ");
-	Serial.println(WiFi.localIP());
+	//Serial.println("Ready");
+	//Serial.print("IP address: ");
+	//Serial.println(WiFi.localIP());
 }
 
 void AC2Class::HandleIO()
@@ -235,22 +245,52 @@ void AC2Class::HandleIO()
 	}
 }
 
-void AC2Class::ReadMessages()
+void AC2Class::ReadUDPMessages()
 {
 	int packetSize = Udp.parsePacket();
 	if (packetSize)
 	{
 		char incomingPacket[256];
 		// receive incoming UDP packets
-		Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+		//Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
 		int len = Udp.read(incomingPacket, 255);
 		if (len > 0)
 		{
 			incomingPacket[len] = 0;
-
-			print(String(millis()) + " " + "UDP: ");
-			println(incomingPacket);
 			String packet = incomingPacket;
+			AddExternalMessage(packet);
+		}
+	}
+}
+
+void AC2Class::ReadSocketMessages()
+{
+	int packetSize = Udp.parsePacket();
+	if (packetSize)
+	{
+		char incomingPacket[256];
+		// receive incoming UDP packets
+		//Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+		int len = Udp.read(incomingPacket, 255);
+		if (len > 0)
+		{
+			incomingPacket[len] = 0;
+			String packet = incomingPacket;
+			AddExternalMessage(packet);
+		}
+	}
+}
+
+void AC2Class::HandleMessageBuffer()
+{
+	String tmpBuffer = "";
+	if (AC2.bufferCount != 0)
+	{
+		for (int i = 0; i < (AC2.bufferCount); i++)
+		{
+			String packet = AC2.buffer[i];
+			print(String(millis()) + " " + "Buffer: ");
+			println(packet);
 			String packetRecipient = "";
 			if (packet.startsWith(device.Name))// ignore messages not sent to you and not broadcast
 			{
@@ -296,8 +336,8 @@ void AC2Class::ReadMessages()
 					HandleConfigureCommand(packet);
 				}
 			}
-
 		}
+		AC2.bufferCount = 0;
 	}
 }
 
@@ -316,12 +356,12 @@ void AC2Class::WriteIO(String DeviceName, IO io)
 		Udp.print(DeviceName + ".Write(" + io.Name + ")%" + io.Value + "%{" + device.Name + "}");
 		if (Udp.endPacket() == 0)
 		{
-			Serial.println("reply send failed");
+			//Serial.println("reply send failed");
 		}
 	}
 	else
 	{
-		Serial.println("beginPacket failed");
+		//Serial.println("beginPacket failed");
 	}
 
 

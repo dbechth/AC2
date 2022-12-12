@@ -7,14 +7,19 @@
 #include <ESP8266WiFi.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
-#define ACBufferSize   16
+#define ACTerminalBufferSize   16
+#define BufferSize   16
 
 
 class AC2Class
 {
 protected:
+    String buffer[BufferSize];
+    int bufferCount;
     WiFiUDP Udp;
-    void ReadMessages();
+    void ReadUDPMessages();
+    void ReadSocketMessages();
+    void HandleMessageBuffer();
     void SendMessages();
     //void HandleWhoIs();
     //void HandleIAm();
@@ -68,14 +73,15 @@ public:
     int  LocalReadIO(String Name);
     void ReadIO(String DeviceName, IO io);
     void HandleIO();
+    void AddExternalMessage(String message);
     void print(String message);
     void println(String message);
     Device device;
     unsigned long lastTime;
     unsigned long timeNow;
     bool EnableOTA;
-    String buffer[ACBufferSize];
-    int bufferCount;
+    String terminalBuffer[ACTerminalBufferSize];
+    int terminalBufferCount;
     ESP8266WebServer webserver;
 };
 
