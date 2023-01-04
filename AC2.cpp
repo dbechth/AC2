@@ -289,8 +289,7 @@ void AC2Class::HandleMessageBuffer()
 		for (int i = 0; i < (AC2.bufferCount); i++)
 		{
 			String packet = AC2.buffer[i];
-			print(String(millis()) + " " + "Buffer: ");
-			println(packet);
+			packet.trim();
 			String packetRecipient = "";
 			if (packet.startsWith(device.Name))// ignore messages not sent to you and not broadcast
 			{
@@ -303,8 +302,9 @@ void AC2Class::HandleMessageBuffer()
 
 			if (packetRecipient.length() != 0)
 			{
-				//Serial.println(packet);
-
+				print(String(millis()) + " " + "Buffer: ");
+				println(packet);
+				
 				if (packet.startsWith(packetRecipient + ".WhoIs"))
 				{
 					//Serial.println(packet);

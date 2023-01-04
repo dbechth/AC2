@@ -7,7 +7,7 @@
 #include <ESP8266WiFi.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
-#define ACTerminalBufferSize   16
+#define ACTerminalBufferSize   64
 #define BufferSize   16
 
 
