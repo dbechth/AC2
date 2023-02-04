@@ -7,6 +7,9 @@
 #include <ESP8266WiFi.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
+#include <time.h>
+#include <FS.h>
+#include <SPIFFSLogger.h>
 #define ACTerminalBufferSize   64
 #define BufferSize   16
 
@@ -17,6 +20,7 @@ protected:
     String buffer[BufferSize];
     int bufferCount;
     WiFiUDP Udp;
+    bool ignoreDestinationAddress;
     void ReadUDPMessages();
     void ReadSocketMessages();
     void HandleMessageBuffer();
@@ -67,6 +71,7 @@ public:
         IO Data[16];
     };
     bool init(String name, IPAddress ip, IPAddress broadcastIP, int port, int TaskRateMS);
+    bool init(String name, IPAddress ip, IPAddress broadcastIP, int port, int TaskRateMS, bool treatAllMessagesAsBroadcast);
     void task();
     void WriteIO(String DeviceName, IO io);
     void LocalWriteIO(IO io);

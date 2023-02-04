@@ -105,11 +105,16 @@ void AC2Class::println(String message)
 }
 bool AC2Class::init(String name, IPAddress ip, IPAddress broadcastIP, int port, int TaskRateMS)
 {
+	return init(name, ip, broadcastIP, port, TaskRateMS, false);
+}
+bool AC2Class::init(String name, IPAddress ip, IPAddress broadcastIP, int port, int TaskRateMS, bool treatAllMessagesAsBroadcast)
+{
 	device.Name = name;
 	device.IP = ip;
 	device.Port = port;
 	device.BroadcastIP = broadcastIP;//IPADDR_BROADCAST;
 	taskRate = TaskRateMS;
+	ignoreDestinationAddress=treatAllMessagesAsBroadcast;
 	SetupOTA();
 
 	//webserver.on("/", AC2Home);      //Which routine to handle at root location. This is display page
@@ -291,7 +296,13 @@ void AC2Class::HandleMessageBuffer()
 			String packet = AC2.buffer[i];
 			packet.trim();
 			String packetRecipient = "";
-			if (packet.startsWith(device.Name))// ignore messages not sent to you and not broadcast
+			if(ignoreDestinationAddress)
+			{
+					int sourceAddressEnd = packet.indexOf(".", 0);
+					String sourceAddress = packet.substring(0, sourceAddressEnd);
+					packetRecipient = sourceAddress;
+			}
+			else if (packet.startsWith(device.Name))// ignore messages not sent to you and not broadcast
 			{
 				packetRecipient = device.Name;
 			}
@@ -299,6 +310,7 @@ void AC2Class::HandleMessageBuffer()
 			{
 				packetRecipient = "Broadcast";
 			}
+			//println(packetRecipient);
 
 			if (packetRecipient.length() != 0)
 			{
@@ -390,7 +402,7 @@ void AC2Class::HandleWriteCommand(String command)
 	int ioNameStart = command.indexOf("(", 0) + 1;
 	int ioNameEnd = command.indexOf(")", ioNameStart + 1);
 	String ioName = command.substring(ioNameStart, ioNameEnd);
-	//Serial.println(ioName);
+	//println(ioName);
 	for (int i = 0; i < 16; i++)
 	{
 		if (ioName.equalsIgnoreCase(device.Data[i].Name))
@@ -398,7 +410,7 @@ void AC2Class::HandleWriteCommand(String command)
 			int valueStart = command.indexOf("%", 0) + 1;
 			int valueEnd = command.indexOf("%", valueStart);
 			String value = command.substring(valueStart, valueEnd);
-			//Serial.println(value);
+			//println(value);
 			device.Data[i].Value = value.toInt();
 			device.Data[i].DataTimer = device.Data[i].Timeout;
 			//Serial.print(device.Data[i].Name);
