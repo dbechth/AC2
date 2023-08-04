@@ -4,12 +4,17 @@
 #define _AC2_h
 
 #include <WiFiUdp.h>
-#include <ESP8266WiFi.h>
 #include <ArduinoOTA.h>
-#include <ESP8266WebServer.h>
+#ifdef ARDUINO_ARCH_ESP32
+    #include <WebServer.h>
+    #include <WiFi.h>
+#else
+    #include <ESP8266WiFi.h>
+    #include <ESP8266WebServer.h>
+#endif
 #include <time.h>
 #include <FS.h>
-#include <SPIFFSLogger.h>
+//#include <SPIFFSLogger.h>
 #define ACTerminalBufferSize   64
 #define BufferSize   16
 
@@ -87,7 +92,11 @@ public:
     bool EnableOTA;
     String terminalBuffer[ACTerminalBufferSize];
     int terminalBufferCount;
-    ESP8266WebServer webserver;
+    #ifdef ARDUINO_ARCH_ESP32
+        WebServer webserver;
+    #else
+        ESP8266WebServer webserver;
+    #endif
 };
 
 extern AC2Class AC2;
