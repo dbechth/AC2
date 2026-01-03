@@ -246,6 +246,15 @@ void AC2Class::HandleIO()
 				device.Data[i].Value = digitalRead(device.Data[i].Pin) == 1;
 			}
 		}
+		else if (device.Data[i].Type == Data)
+		{
+			if ((device.Data[i].DataTimer >= 0) && (device.Data[i].DataTimer <= (int)taskRate)) {
+				device.Data[i].Value = device.Data[i].DefaultValue;
+			}
+			else if (device.Data[i].DataTimer >= 0) {
+				device.Data[i].DataTimer -= taskRate;
+			}
+		}
 
 	}
 }
